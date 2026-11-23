@@ -33,6 +33,7 @@ const t = getT("Currency");
  */
 export const CURRENCIES: CurrencyOption[] = [
   { code: "USD", label: t("USD"), symbol: "$" },
+  { code: "PEN", label: t("PEN"), symbol: "S/" },
   { code: "EUR", label: t("EUR"), symbol: "€" },
   { code: "GBP", label: t("GBP"), symbol: "£" },
   { code: "INR", label: t("INR"), symbol: "₹" },
