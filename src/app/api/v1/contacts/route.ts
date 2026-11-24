@@ -123,7 +123,17 @@ export async function POST(request: Request) {
       }
     );
 
-    if (Array.isArray(body.tags))
+    if (Array.isArray(body.tags)) {
+      const applyTags = created ? setContactTags : addContactTags;
+      await applyTags(
+        ctx.supabase,
+        ctx.accountId,
+        auditUserId,
+        id,
+        body.tags.filter((t): t is string => typeof t === 'string')
+      );
+    }
+
     if (
       body.custom_fields &&
       typeof body.custom_fields === 'object' &&
@@ -169,16 +179,6 @@ export async function POST(request: Request) {
           }
         }
       }
-    }
-    {
-      const applyTags = created ? setContactTags : addContactTags;
-      await applyTags(
-        ctx.supabase,
-        ctx.accountId,
-        auditUserId,
-        id,
-        body.tags.filter((t): t is string => typeof t === 'string')
-      );
     }
 
     const contact = await getContactById(ctx.supabase, ctx.accountId, id);
