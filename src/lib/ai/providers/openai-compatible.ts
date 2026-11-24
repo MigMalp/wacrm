@@ -123,7 +123,7 @@ export async function generateOpenAiCompatible(
       body: JSON.stringify({
         model,
         messages: [{ role: 'system', content: systemPrompt }, ...mergeConsecutive(messages)],
-        max_tokens: MAX_OUTPUT_TOKENS,
+        max_tokens: Math.max(MAX_OUTPUT_TOKENS, 4096),
       }),
       signal: AbortSignal.timeout(timeoutMs),
     })
