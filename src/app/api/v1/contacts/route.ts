@@ -123,7 +123,54 @@ export async function POST(request: Request) {
       }
     );
 
-    if (Array.isArray(body.tags)) {
+    if (Array.isArray(body.tags))
+    if (
+      body.custom_fields &&
+      typeof body.custom_fields === 'object' &&
+      !Array.isArray(body.custom_fields)
+    ) {
+      const entries = Object.entries(
+        body.custom_fields as Record<string, unknown>
+      ).filter(
+        ([, v]) => typeof v === 'string' && v.trim().length > 0
+      ) as Array<[string, string]>;
+
+      if (entries.length > 0) {
+        const { data: fields } = await ctx.supabase
+          .from('custom_fields')
+          .select('id, field_name')
+          .eq('account_id', ctx.accountId);
+
+        const fieldIdByName = new Map(
+          (fields ?? []).map((f) => [
+            String(f.field_name).trim().toLowerCase(),
+            String(f.id),
+          ])
+        );
+
+        const rows = entries
+          .map(([name, value]) => {
+            const customFieldId = fieldIdByName.get(name.trim().toLowerCase());
+            if (!customFieldId) return null;
+            return {
+              contact_id: id,
+              custom_field_id: customFieldId,
+              value: value.trim(),
+            };
+          })
+          .filter((r): r is NonNullable<typeof r> => r !== null);
+
+        if (rows.length > 0) {
+          const { error: cfError } = await ctx.supabase
+            .from('contact_custom_values')
+            .upsert(rows, { onConflict: 'contact_id,custom_field_id' });
+          if (cfError) {
+            console.error('[api/v1/contacts] custom_fields error:', cfError);
+          }
+        }
+      }
+    }
+    {
       const applyTags = created ? setContactTags : addContactTags;
       await applyTags(
         ctx.supabase,
